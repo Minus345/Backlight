@@ -1,6 +1,50 @@
 import PIL
 import sacn
 
+
+def captureSingleChunk(screenshot, singleChunkXStart, singleChunkXStop, singleChunkYStart, singleChunkYStop):
+    """ Captures one single chunk from the screenshot.
+    Square: Upper Left Point -> singleChunkXStart/singleChunkYStart |
+    Lower Right Point -> singleChunkXStop/singleChunkYStop"""
+    singleChunkData = []
+    r = 0
+    g = 0
+    b = 0
+    for x in range(int(singleChunkXStart), int(singleChunkXStop)):
+        for y in range(int(singleChunkYStart), int(singleChunkYStop)):
+            chunkRGB = screenshot.load()[x, y]
+            r += chunkRGB[0]
+            g += chunkRGB[1]
+            b += chunkRGB[2]
+    averageRed = int((r / pixelInChunk))
+    averageGreen = int((g / pixelInChunk))
+    averageBlue = int((b / pixelInChunk))
+    singleChunkData.append(averageRed)
+    singleChunkData.append(averageGreen)
+    singleChunkData.append(averageBlue)
+    return singleChunkData
+
+
+def captureChunksTop(screenshot1):
+    chunkData = []
+    for i in range(1, chunkCount + 1):
+        cordX1 = (i - 1) * chunkX
+        cordX2 = i * chunkX
+        chunkData.extend(captureSingleChunk(screenshot1, cordX1, cordX2, 0, chunkY))
+    #print(chunkData)
+    return chunkData
+
+
+def captureChunksBottom(screenshot1, height):
+    chunkData = []
+    for i in range(1, chunkCount + 1):
+        cordX1 = (i - 1) * chunkX
+        cordX2 = i * chunkX
+        chunkData.extend(captureSingleChunk(screenshot1, cordX1, cordX2, (height - chunkY), height))
+    #print(chunkData)
+    return chunkData
+
+
 if __name__ == '__main__':
     from PIL import ImageGrab
 
@@ -23,34 +67,15 @@ if __name__ == '__main__':
 
     numbersChunkX = 10
 
-    chunkY = 100
+    chunkY = 10
     chunkX = size[1] / 10
     chunk = chunkX, chunkY
     pixelInChunk = chunkX * chunkY
-    chunkCount = 16
+    chunkCount = 10
 
     while True:
         screenshot = ImageGrab.grab(bbox=(0, 0, 1920, 1080), include_layered_windows=True)
-        data = []
-        for i in range(chunkCount):
-            r = 0
-            g = 0
-            b = 0
-            for x in range(int(chunkX)):
-                for y in range(int(chunkY)):
-                    rgb = screenshot.load()[x + (i * chunkX), y]
-                    r += rgb[0]
-                    g += rgb[1]
-                    b += rgb[2]
-
-            averageRed = int((r / pixelInChunk))
-            averageGreen = int((g / pixelInChunk))
-            averageBlue = int((b / pixelInChunk))
-            data.append(averageRed)
-            data.append(averageGreen)
-            data.append(averageBlue)
-
-        #print(data)
+        data = captureChunksBottom(screenshot, 1080)
         sender[1].dmx_data = data
         sender.flush()
 
